@@ -55,8 +55,17 @@ def get_games_tiles_from_page_soup(soup):
             else:
                 price = price_wrapper.text.strip('\n')
 
-        card_title = tile.find('h2').text.strip('\n').strip(' ')
-        card_sub_title = tile.find('h3').text
+        card_title = tile.find('div', class_='prod-title')
+        if card_title is not None:
+            card_title = card_title.text.strip('\n').strip(' ')
+        else:
+            card_title = ''
+
+        card_sub_title = tile.find('div', class_='card-subtitle')
+        if card_sub_title is not None:
+            card_sub_title = card_sub_title.text.strip('\n').strip(' ')
+        else:
+            card_sub_title = ''
 
         game = Game(card_title, card_sub_title, price, discount)
         games.append(game)
@@ -77,7 +86,7 @@ def get_all_games_from_web_page(url):
     return games
 
 
-def get_ubisoft_games_with_discount(search_for_name):
+def get_ubisoft_games_with_discount(search_for_name=None):
     games = get_all_games_from_web_page("https://store.ubi.com/ru/games")
     print(f'Total games: {len(games)}')
 

@@ -1,35 +1,31 @@
 import logging
+import asyncio
 from ubisoftparser import get_ubisoft_games_with_discount
 
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import Bot
 
 API_TOKEN = ''
+CHANNEL_ID = 0
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # Initialize bot and dispatcher
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
 ubisoft_games_with_discount = get_ubisoft_games_with_discount("Anno 1800")
 
 
-@dp.message_handler(commands=['start', 'help'])
-async def send_welcome(message: types.Message):
-    """
-    This handler will be called when user sends `/start` or `/help` command
-    """
-    await message.reply("Hi!\nI'm EchoBot!\nPowered by aiogram.")
-    await message.answer(ubisoft_games_with_discount)
+async def send_message(channel_id: int, text: str):
+    if len(text) > 4096:
+        for x in range(0, len(text), 4096):
+            await bot.send_message(channel_id, text[x:x + 4096])
+    else:
+        await bot.send_message(channel_id, text)
 
 
-@dp.message_handler()
-async def echo(message: types.Message):
-    # old style:
-    # await bot.send_message(message.chat.id, message.text)
-
-    await message.answer(message.text)
+async def main():
+    await send_message(CHANNEL_ID, ubisoft_games_with_discount)
 
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    asyncio.run(main())
