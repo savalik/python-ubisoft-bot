@@ -1,11 +1,12 @@
+import os
 import logging
 import asyncio
 from ubisoftparser import get_ubisoft_games_with_discount
 
 from aiogram import Bot
 
-API_TOKEN = ''
-CHANNEL_ID = 0
+API_TOKEN = os.getenv('API_TOKEN')
+CHANNEL_ID = os.getenv('CHANNEL_ID')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
