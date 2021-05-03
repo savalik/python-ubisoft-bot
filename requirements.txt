@@ -1,0 +1,4 @@
+asyncio
+aiogram
+bs4
+requests

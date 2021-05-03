@@ -5,16 +5,6 @@ from ubisoftparser import get_ubisoft_games_with_discount
 
 from aiogram import Bot
 
-API_TOKEN = os.getenv('API_TOKEN')
-CHANNEL_ID = os.getenv('CHANNEL_ID')
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-
-# Initialize bot and dispatcher
-bot = Bot(token=API_TOKEN)
-ubisoft_games_with_discount = get_ubisoft_games_with_discount("Anno 1800")
-
 
 async def send_message(channel_id: int, text: str):
     if len(text) > 4096:
@@ -25,8 +15,27 @@ async def send_message(channel_id: int, text: str):
 
 
 async def main():
-    await send_message(CHANNEL_ID, ubisoft_games_with_discount)
+    await send_message(int(CHANNEL_ID), ubisoft_games_with_discount)
 
 
 if __name__ == '__main__':
+    API_TOKEN = os.getenv('API_TOKEN')
+    CHANNEL_ID = os.getenv('CHANNEL_ID')
+
+    if API_TOKEN is None:
+        print("API_TOKEN variable are not set")
+
+    if CHANNEL_ID is None:
+        print("CHANNEL_ID variable are not set")
+
+    if(API_TOKEN is None) or (CHANNEL_ID is None):
+        exit()
+
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+
+    # Initialize bot and dispatcher
+    bot = Bot(token=API_TOKEN)
+    ubisoft_games_with_discount = get_ubisoft_games_with_discount("Anno 1800")
+
     asyncio.run(main())
