@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-GOOD_DEAL_PERCENT = 49
+GOOD_DEAL_PERCENT = 45
 CHUNK_SIZE = 50
 MAX_GAMES = 1000
 
