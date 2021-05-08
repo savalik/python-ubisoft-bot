@@ -4,7 +4,6 @@ from datetime import datetime
 from decimal import *
 from bs4 import BeautifulSoup
 
-GOOD_DEAL_PERCENT = 45
 CHUNK_SIZE = 50
 MAX_GAMES = 1000
 
@@ -31,6 +30,10 @@ class Game:
         Discount: {self.discount}
         Price: {self.price}\n'''
         return message
+
+    @classmethod
+    def from_parsed(cls, game):
+        return cls(game.title, game.sub_title, str(game.price), str(game.discount), game.updated_on)
 
 
 def get_all_games_by_discount(li, discount, name=None):

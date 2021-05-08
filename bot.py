@@ -3,6 +3,7 @@ import logging
 import asyncio
 
 import data_access.base
+import ubisoftparser
 
 from data_access.game import Game
 from ubisoftparser import get_ubisoft_games, get_all_games_by_discount
@@ -10,6 +11,8 @@ from aiogram import Bot
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+GOOD_DEAL_PERCENT = 45
 
 engine = create_engine("sqlite:///sqlite_python.db")
 data_access.base.Base.metadata.create_all(engine, checkfirst=True)
@@ -50,9 +53,10 @@ async def send_message(channel_id: int, text: str):
 
 async def main(ubisoft_games_with_discount=None):
     if ubisoft_games_with_discount:
-        message = prepare_message(ubisoft_games_with_discount)
+        _games = {ubisoftparser.Game.from_parsed(game) for game in ubisoft_games_with_discount}
+        games_for_sending = get_all_games_by_discount(_games, GOOD_DEAL_PERCENT, 'Anno 1800')
+        message = prepare_message(games_for_sending)
         await send_message(int(CHANNEL_ID), message)
-    await bot.close()
 
 
 if __name__ == '__main__':
