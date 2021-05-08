@@ -14,11 +14,6 @@ from sqlalchemy.orm import sessionmaker
 
 GOOD_DEAL_PERCENT = 45
 
-engine = create_engine("sqlite:///sqlite_python.db")
-data_access.base.Base.metadata.create_all(engine, checkfirst=True)
-Session = sessionmaker(bind=engine)
-session = Session()
-
 
 def prepare_message(games_with_good_discount):
     answer = []
@@ -62,6 +57,7 @@ async def main(ubisoft_games_with_discount=None):
 if __name__ == '__main__':
     API_TOKEN = os.getenv('API_TOKEN')
     CHANNEL_ID = os.getenv('CHANNEL_ID')
+    DB_CONNECTION_STRING = os.getenv('DB_CONNECTION_STRING')
 
     if API_TOKEN is None:
         print("API_TOKEN variable are not set")
@@ -69,7 +65,10 @@ if __name__ == '__main__':
     if CHANNEL_ID is None:
         print("CHANNEL_ID variable are not set")
 
-    if (API_TOKEN is None) or (CHANNEL_ID is None):
+    if DB_CONNECTION_STRING is None:
+        print("DB_CONNECTION_STRING variable are not set")
+
+    if (API_TOKEN is None) or (CHANNEL_ID is None) or (DB_CONNECTION_STRING is None):
         exit()
 
     # Configure logging
@@ -77,6 +76,11 @@ if __name__ == '__main__':
 
     # Initialize bot and dispatcher
     bot = Bot(token=API_TOKEN)
+
+    engine = create_engine(DB_CONNECTION_STRING)
+    data_access.base.Base.metadata.create_all(engine, checkfirst=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
     # Here we get all games and save it to DB. Change it to compare with saved data, and save only changed
     fresh_games_list = get_ubisoft_games()
@@ -92,6 +96,5 @@ if __name__ == '__main__':
 
     print(f'{len(changed_prices)}  prices was updated')
 
-#test for commit
     if len(changed_prices) > 0:
         asyncio.run(main(changed_prices))

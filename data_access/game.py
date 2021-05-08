@@ -11,7 +11,7 @@ class Game(Base):
     sub_title = Column(UnicodeText, nullable=True)
     price = Column(DECIMAL)
     discount = Column(DECIMAL)
-    updated_on = Column(DATETIME)
+    updated_on = Column(DateTime)
 
     def __init__(self, title: str, sub_title: str, price: DECIMAL, discount: DECIMAL, updated_on: datetime):
         self.title = title
