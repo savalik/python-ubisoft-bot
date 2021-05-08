@@ -82,6 +82,7 @@ if __name__ == '__main__':
     fresh_games_list = get_ubisoft_games()
 
     savedGames = session.query(Game).all()
+    print(f'{len(savedGames)}  prices was read from db')
 
     fresh_games_dal = {Game.from_parsed(game) for game in fresh_games_list}
     changed_prices = get_changed_prices(savedGames, fresh_games_dal)
