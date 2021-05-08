@@ -1,4 +1,7 @@
+import re
 import requests
+from datetime import datetime
+from decimal import *
 from bs4 import BeautifulSoup
 
 GOOD_DEAL_PERCENT = 45
@@ -7,11 +10,20 @@ MAX_GAMES = 1000
 
 
 class Game:
-    def __init__(self, title, sub_title, price, discount):
+    def __init__(self, title: str, sub_title: str, price: str, discount: str, updated_on: datetime):
         self.title = title
         self.sub_title = sub_title
-        self.price = price
-        self.discount = discount
+        prices = re.findall(r'(?:\d+\.)?\d+', price.replace('.', '').replace(',', '.'))
+        if len(prices) > 0:
+            self.price = Decimal(prices[0])
+        else:
+            self.price = Decimal(0.0)
+        discounts = re.findall("\d+", discount.replace('.', '').replace(',', '.'))
+        if len(discounts) > 0:
+            self.discount = Decimal(discounts[0])
+        else:
+            self.discount = Decimal(0.0)
+        self.updated_on = updated_on
 
     def print_game(self):
         message = f'''
@@ -23,10 +35,8 @@ class Game:
 
 def get_all_games_by_discount(li, discount, name=None):
     return [game for game in li if
-            game.discount != 0
-            and ((name is None) or (name in game.title))
-            and game.discount != ''
-            and int(game.discount.strip('%')) * -1 > discount]
+            game.discount > discount
+            and ((name is None) or (name in game.title))]
 
 
 def get_soup_from_web_page(url, chunk_size, start_position):
@@ -39,6 +49,7 @@ def get_soup_from_web_page(url, chunk_size, start_position):
 
 def get_games_tiles_from_page_soup(soup):
     games = []
+    updated_on = datetime.now()
     tiles = soup.findAll('li', class_='grid-tile cell shrink')
     tiles_count = 0
     price = 0
@@ -46,7 +57,7 @@ def get_games_tiles_from_page_soup(soup):
         tiles_count += 1
         price_wrappers = tile.findAll('div', class_='price-wrapper')
         pw_count = 0
-        discount = 0
+        discount = ''
         for price_wrapper in price_wrappers:
             pw_count += 1
             if pw_count == 2:
@@ -67,8 +78,9 @@ def get_games_tiles_from_page_soup(soup):
         else:
             card_sub_title = ''
 
-        game = Game(card_title, card_sub_title, price, discount)
-        games.append(game)
+        if type(price) is str:
+            game = Game(card_title, card_sub_title, price, discount, updated_on)
+            games.append(game)
     return games
 
 
@@ -86,23 +98,12 @@ def get_all_games_from_web_page(url):
     return games
 
 
-def get_ubisoft_games_with_discount(search_for_name=None):
-    games = get_all_games_from_web_page("https://store.ubi.com/ru/games")
-    print(f'Total games: {len(games)}')
-
-    games_with_good_discount = get_all_games_by_discount(games, GOOD_DEAL_PERCENT, search_for_name)
-    answer = []
-    message = f'Games with good discount: {len(games_with_good_discount)}'
-    answer.append(message)
-    for gameWithDiscount in games_with_good_discount:
-        answer.append(gameWithDiscount.print_game())
-    return ''.join(answer)
+def get_ubisoft_games():
+    return get_all_games_from_web_page("https://store.ubi.com/ru/games")
 
 
 if __name__ == '__main__':
-    import sys
-
-    if len(sys.argv) > 1:
-        get_ubisoft_games_with_discount(sys.argv[1])
-    else:
-        get_ubisoft_games_with_discount(None)
+    fresh_games = get_ubisoft_games()
+    print(f'Total games: {len(fresh_games)}')
+    for fresh_game in fresh_games:
+        print(fresh_game.print_game())

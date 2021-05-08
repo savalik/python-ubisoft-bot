@@ -3,3 +3,4 @@ aiogram
 bs4
 requests
 lxml
+sqlalchemy
