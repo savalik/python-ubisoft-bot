@@ -91,5 +91,6 @@ if __name__ == '__main__':
 
     print(f'{len(changed_prices)}  prices was updated')
 
+#test for commit
     if len(changed_prices) > 0:
         asyncio.run(main(changed_prices))
