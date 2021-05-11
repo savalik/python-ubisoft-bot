@@ -14,6 +14,7 @@ from sqlalchemy.orm import sessionmaker
 
 GOOD_DEAL_PERCENT = 45
 
+
 #API_TOKEN = os.environ.get('API_TOKEN')
 CHANNEL_ID = os.getenv('CHANNEL_ID')
 DB_CONNECTION_STRING = os.getenv('DB_CONNECTION_STRING')
