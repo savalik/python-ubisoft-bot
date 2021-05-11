@@ -30,11 +30,11 @@ jobs:
       # Runs a single command using the runners shell
       - name: Secrets env
         with: # Set the secret as an input
-            API_TOKEN: ${{ secrets.API_TOKEN }}
-            CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
         env: # Or as an environment variable
-            API_TOKEN: ${{ secrets.API_TOKEN }}
-            CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
       - name: Run bot
         run: python bot.py
 
