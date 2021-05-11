@@ -23,7 +23,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - shell: pwsh
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -32,10 +31,8 @@ jobs:
       - name: Secrets env
         env: # Or as an environment variable
           API_TOKEN: ${{ secrets.API_TOKEN }}
-          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
         run: | 
           "$env:API_TOKEN"
-          "$env:CHANNEL_ID"
       - name: Run bot
         run: python bot.py
 
