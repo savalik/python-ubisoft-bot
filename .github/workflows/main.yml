@@ -32,7 +32,7 @@ jobs:
         env: # Or as an environment variable
           API_TOKEN: ${{ secrets.API_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-          DB_CONNECTION_STRING: ${{ secrets.API_TOKEN }}
+          DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
           "$env:API_TOKEN"
           "$env:CHANNEL_ID"
