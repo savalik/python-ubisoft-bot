@@ -17,8 +17,8 @@ GOOD_DEAL_PERCENT = 45
 #API_TOKEN = os.environ.get('API_TOKEN')
 CHANNEL_ID = os.environ('CHANNEL_ID')
 #DB_CONNECTION_STRING = os.environ('DB_CONNECTION_STRING')
-print(API_TOKEN)
-print(API_TOKEN + 1)
+print(CHANNEL_ID)
+print(CHANNEL_ID + 1)
 #print(os.environ('CHANNEL_ID'))
 #print(os.environ('DB_CONNECTION_STRING'))
 def prepare_message(games_with_good_discount):
