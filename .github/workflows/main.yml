@@ -28,11 +28,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       # Runs a single command using the runners shell
-      - name: Secrets env
+      - name: Add secrets API_TOKEN
         env: # Or as an environment variable
           API_TOKEN: ${{ secrets.API_TOKEN }}
         run: | 
           "$env:API_TOKEN"
+      - name: Add secrets CHANNEL_ID
+        env: # Or as an environment variable
+          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
+        run: | 
+          "$env:CHANNEL_ID"
       - name: Run bot
         run: python bot.py
 
