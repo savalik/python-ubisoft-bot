@@ -14,9 +14,12 @@ from sqlalchemy.orm import sessionmaker
 
 GOOD_DEAL_PERCENT = 45
 
-print(os.environ('API_TOKEN'))
-print(os.environ('CHANNEL_ID'))
-print(os.environ('DB_CONNECTION_STRING'))
+API_TOKEN = os.environ('API_TOKEN')
+#CHANNEL_ID = os.environ('CHANNEL_ID')
+#DB_CONNECTION_STRING = os.environ('DB_CONNECTION_STRING')
+print(API_TOKEN)
+#print(os.environ('CHANNEL_ID'))
+#print(os.environ('DB_CONNECTION_STRING'))
 def prepare_message(games_with_good_discount):
     answer = []
     message = f'Games with good discount: {len(games_with_good_discount)}'
