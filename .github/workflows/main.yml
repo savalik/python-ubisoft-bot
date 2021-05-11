@@ -35,7 +35,9 @@ jobs:
         env: # Or as an environment variable
           API_TOKEN: ${{ secrets.API_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-        run: example-command "$env:API_TOKEN"
+        run: |
+          "$env:API_TOKEN"
+          "$env:CHANNEL_ID"
       - name: Run bot
         run: python bot.py
 
