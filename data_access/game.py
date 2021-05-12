@@ -23,3 +23,21 @@ class Game(Base):
     @classmethod
     def from_parsed(cls, game: ubisoftparser.Game):
         return cls(game.title, game.sub_title, game.price, game.discount, game.updated_on)
+
+
+def fetch_all_current_prices_from_db(session):
+    subquery = (session.query(
+        Game.title,
+        Game.sub_title,
+        func.max(Game.updated_on)
+    ).
+                group_by(Game.title, Game.sub_title)
+                ).subquery()
+
+    last_prices_dal = session.query(Game).join(subquery, (subquery.c.title == Game.title) & (
+            subquery.c.sub_title == Game.sub_title) & (subquery.c.max == Game.updated_on)).all()
+    return {ubisoftparser.Game.from_parsed(game) for game in last_prices_dal}
+
+
+def fetch_list_of_titles(session):
+    return session.query(Game.title).distinct().order_by(Game.title).all()

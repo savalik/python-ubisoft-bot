@@ -6,34 +6,65 @@ from bs4 import BeautifulSoup
 
 CHUNK_SIZE = 50
 MAX_GAMES = 1000
+MAX_BYTES_IN_TITLE = 62 # 64 bytes is max for callback data in telegram, I'm add 2 byte for each title, for example: x_FarCry
+
+
+def cut_str_to_bytes(s, max_bytes):
+    # cut it twice to avoid encoding potentially GBs of `s` just to get e.g. 10 bytes?
+    b = s[:max_bytes].encode('utf-8')[:max_bytes]
+
+    if b[-1] & 0b10000000:
+        last_11xxxxxx_index = [i for i in range(-1, -5, -1)
+                               if b[i] & 0b11000000 == 0b11000000][0]
+        # note that last_11xxxxxx_index is negative
+
+        last_11xxxxxx = b[last_11xxxxxx_index]
+        if not last_11xxxxxx & 0b00100000:
+            last_char_length = 2
+        elif not last_11xxxxxx & 0b0010000:
+            last_char_length = 3
+        elif not last_11xxxxxx & 0b0001000:
+            last_char_length = 4
+
+        if last_char_length > -last_11xxxxxx_index:
+            # remove the incomplete character
+            b = b[:last_11xxxxxx_index]
+
+    return b.decode('utf-8')
 
 
 class Game:
     def __init__(self, title: str, sub_title: str, price: str, discount: str, updated_on: datetime):
-        self.title = title
+        self.title = cut_str_to_bytes(title, MAX_BYTES_IN_TITLE)
         self.sub_title = sub_title
-        prices = re.findall(r'(?:\d+\.)?\d+', price.replace('.', '').replace(',', '.'))
-        if len(prices) > 0:
-            self.price = Decimal(prices[0])
+        if type(price) is Decimal:
+            self.price = price
         else:
-            self.price = Decimal(0.0)
-        discounts = re.findall("\d+", discount.replace('.', '').replace(',', '.'))
-        if len(discounts) > 0:
-            self.discount = Decimal(discounts[0])
+            prices = re.findall(r'(?:\d+\.)?\d+', price.replace('.', '').replace(',', '.'))
+            if len(prices) > 0:
+                self.price = Decimal(prices[0])
+            else:
+                self.price = Decimal(0.0)
+        if type(discount) is Decimal:
+            self.discount = discount
         else:
-            self.discount = Decimal(0.0)
+            discounts = re.findall("\d+", discount.replace('.', '').replace(',', '.'))
+            if len(discounts) > 0:
+                self.discount = Decimal(discounts[0])
+            else:
+                self.discount = Decimal(0.0)
         self.updated_on = updated_on
 
     def print_game(self):
         message = f'''
         Title: {self.title} {self.sub_title}
-        Discount: {self.discount}
+        Discount: -{self.discount}%
         Price: {self.price}\n'''
         return message
 
     @classmethod
     def from_parsed(cls, game):
-        return cls(game.title, game.sub_title, str(game.price), str(game.discount), game.updated_on)
+        return cls(game.title, game.sub_title, game.price, game.discount, game.updated_on)
 
 
 def get_all_games_by_discount(li, discount, name=None):
