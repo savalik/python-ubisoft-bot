@@ -1,3 +1,4 @@
+import datetime
 import os
 import logging
 import asyncio
@@ -34,6 +35,17 @@ def prepare_message(games_with_good_discount):
     return ''.join(answer)
 
 
+def get_game_list_by_user_settings(last_prices, settings):
+    if settings.all_games:
+        return last_prices
+
+    games_list = settings.games.split('|')
+    games_for_sending = []
+    for game in games_list:
+        games_for_sending.extend(get_all_games_by_discount(last_prices, GOOD_DEAL_PERCENT, game))
+    return games_for_sending
+
+
 async def send_message(channel_id: int, text: str):
     if len(text) > 4096:
         for x in range(0, len(text), 4096):
@@ -42,13 +54,14 @@ async def send_message(channel_id: int, text: str):
         await bot.send_message(channel_id, text)
 
 
-async def main(users, ubisoft_games_with_discount=None):
+async def send_discounts_to_users(_session, ubisoft_games_with_discount=None):
     if ubisoft_games_with_discount:
+        users = _session.query(User).all()
         _games = {ubisoftparser.Game.from_parsed(game) for game in ubisoft_games_with_discount}
         for user in users:
-            games_for_sending = get_all_games_by_discount(_games, GOOD_DEAL_PERCENT)
+            games_for_sending = get_game_list_by_user_settings(_games, user)
             message = prepare_message(games_for_sending)
-            await send_message(int(CHANNEL_ID), message)
+            await send_message(user.channel_id, message)
 
 
 def check_env_variables():
@@ -80,13 +93,13 @@ if __name__ == '__main__':
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    # Here we get all games and save it to DB. Change it to compare with saved data, and save only changed
-    fresh_games_list = get_ubisoft_games()
-    # fresh_games_list = []
+    fresh_games_list = []
 
     savedGames = data_access.game.fetch_all_current_prices_from_db(session)
-    print(f'{len(savedGames)}  prices was read from db')
+    max_date = max({game.updated_on for game in savedGames}) if len(savedGames) > 0 else datetime.datetime(2000, 1, 1)
+    print(f'{len(savedGames)} prices was read from db. Last date - {max_date}')
 
+    fresh_games_list = get_ubisoft_games() if max_date + datetime.timedelta(hours=3) < datetime.datetime.now() else []
     fresh_games_dal = {Game.from_parsed(game) for game in fresh_games_list}
     changed_prices = compare_price.get_changed_prices(savedGames, fresh_games_dal)
     if len(changed_prices) > 0:
@@ -97,17 +110,15 @@ if __name__ == '__main__':
 
     import sys
 
-    if len(sys.argv) == 2 and sys.argv == 'start-bot':
+    if len(sys.argv) == 2 and sys.argv[1] == 'start-bot':
         dp = Dispatcher(bot)
 
         @dp.message_handler(commands=['start', 'help'])
         async def send_welcome(message: types.Message):
-            greet_kb = ReplyKeyboardMarkup(resize_keyboard=True)
-            greet_kb.add(KeyboardButton('Покажи мои настройки!'))\
-                .add(KeyboardButton('Подпиши меня на игру!')) \
-                .add(KeyboardButton('Отпиши меня от игры!')) \
-                .add(KeyboardButton('Покажи все скидки ubisoft!')) \
-                .add(KeyboardButton('Покажи мои скидки!'))
+            greet_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=5)
+            greet_kb.add(KeyboardButton('Покажи мои настройки!'))
+            greet_kb.row(KeyboardButton('Подпиши меня на игру!'), KeyboardButton('Отпиши меня от игры!'))
+            greet_kb.row(KeyboardButton('Покажи все скидки ubisoft!'), KeyboardButton('Покажи мои скидки!'))
             await message.reply("Hi!\nI'm EchoBot!\nPowered by aiogram.", reply_markup=greet_kb)
 
 
@@ -206,10 +217,7 @@ if __name__ == '__main__':
                     else:
                         await message.reply(message_for_sending)
                 elif len(settings.games) > 0:
-                    games_list = settings.games.split('|')
-                    games_for_sending = []
-                    for game in games_list:
-                        games_for_sending.extend(get_all_games_by_discount(last_prices, GOOD_DEAL_PERCENT, game))
+                    games_for_sending = get_game_list_by_user_settings(last_prices, settings)
                     message_for_sending = prepare_message(games_for_sending)
                     if len(message_for_sending) > 4096:
                         for x in range(0, len(message_for_sending), 4096):
@@ -250,4 +258,4 @@ if __name__ == '__main__':
 
     elif len(sys.argv) == 1:
         if len(changed_prices) > 0:
-            asyncio.run(main(changed_prices))
+            asyncio.run(send_discounts_to_users(session, changed_prices))
