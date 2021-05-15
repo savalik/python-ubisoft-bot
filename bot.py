@@ -11,24 +11,22 @@ from data_access.game import Game
 from data_access.user import User
 from ubisoftparser import get_ubisoft_games, get_all_games_by_discount
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.dispatcher.filters import Text
 from aiogram.utils import exceptions
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import func
-
-import sys
 
 GOOD_DEAL_PERCENT = 5
 GAMES_IN_ONE_MESSAGE = 100
 ALL_GAMES = 'ALL-GAMES'
 
 
-def prepare_message(games_with_good_discount):
+def prepare_message(games_with_good_discount, only_new: bool):
     answer = []
-    message = f'Games with good discount: {len(games_with_good_discount)}'
+    count = len(games_with_good_discount)
+    message = f'Fresh discounts: {count}' if only_new else f'Games with good discount: {count}'
     answer.append(message)
     for gameWithDiscount in games_with_good_discount:
         answer.append(gameWithDiscount.print_game())
@@ -60,7 +58,7 @@ async def send_discounts_to_users(_session, ubisoft_games_with_discount=None):
         _games = {ubisoftparser.Game.from_parsed(game) for game in ubisoft_games_with_discount}
         for user in users:
             games_for_sending = get_game_list_by_user_settings(_games, user)
-            message = prepare_message(games_for_sending)
+            message = prepare_message(games_for_sending, only_new=True)
             await send_message(user.channel_id, message)
 
 
@@ -126,7 +124,7 @@ if __name__ == '__main__':
         async def send_all_discounts(message: types.Message):
             last_prices = data_access.game.fetch_all_current_prices_from_db(session)
             games_for_sending = get_all_games_by_discount(last_prices, GOOD_DEAL_PERCENT)
-            message_for_sending = prepare_message(games_for_sending)
+            message_for_sending = prepare_message(games_for_sending, only_new=False)
             if len(message_for_sending) > 4096:
                 for x in range(0, len(message_for_sending), 4096):
                     await message.reply(message_for_sending[x:x + 4096])
@@ -210,7 +208,7 @@ if __name__ == '__main__':
                 last_prices = data_access.game.fetch_all_current_prices_from_db(session)
                 if settings.all_games:
                     games_for_sending = get_all_games_by_discount(last_prices, GOOD_DEAL_PERCENT)
-                    message_for_sending = prepare_message(games_for_sending)
+                    message_for_sending = prepare_message(games_for_sending, only_new=False)
                     if len(message_for_sending) > 4096:
                         for x in range(0, len(message_for_sending), 4096):
                             await message.reply(message_for_sending[x:x + 4096])
@@ -218,7 +216,7 @@ if __name__ == '__main__':
                         await message.reply(message_for_sending)
                 elif len(settings.games) > 0:
                     games_for_sending = get_game_list_by_user_settings(last_prices, settings)
-                    message_for_sending = prepare_message(games_for_sending)
+                    message_for_sending = prepare_message(games_for_sending, only_new=False)
                     if len(message_for_sending) > 4096:
                         for x in range(0, len(message_for_sending), 4096):
                             await message.reply(message_for_sending[x:x + 4096])
