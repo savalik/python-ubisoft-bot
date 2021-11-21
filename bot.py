@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     savedGames = data_access.game.fetch_all_current_prices_from_db(session)
     max_date = max({game.updated_on for game in savedGames}) if len(savedGames) > 0 else datetime.datetime(2000, 1, 1)
-    print('VERSION 2021.11.21')
+    print('VERSION 2021.11.21 22:15')
     print(f'{len(savedGames)} prices was read from db. Last date - {max_date}')
 
     fresh_games_list = get_ubisoft_games() if max_date + datetime.timedelta(hours=3) < datetime.datetime.now() else []
