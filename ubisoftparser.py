@@ -84,7 +84,7 @@ def get_soup_from_web_page(url, chunk_size, start_position):
 def get_games_tiles_from_page_soup(soup):
     games = []
     updated_on = datetime.now()
-    tiles = soup.findAll('li', class_='grid-tile cell shrink')
+    tiles = soup.findAll('li', class_='grid-tile cell shrink grid-tile--auto')
     tiles_count = 0
     price = 0
     for tile in tiles:
